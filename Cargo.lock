@@ -801,33 +801,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "markdown-oxide"
-version = "0.25.1"
-dependencies = [
- "anyhow",
- "chrono",
- "config",
- "do-notation",
- "fuzzydate",
- "indexmap",
- "itertools",
- "nanoid",
- "nucleo-matcher",
- "once_cell",
- "pathdiff",
- "rayon",
- "regex",
- "ropey",
- "serde",
- "serde_json",
- "serde_yaml",
- "shellexpand",
- "tokio",
- "tower-lsp",
- "walkdir",
-]
-
-[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -904,6 +877,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62948e14d923ea95ea2c7c86c71013138b66525b86bdc08d2dcc262bdb497b87"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "obsidian-lsp"
+version = "0.25.1"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "config",
+ "do-notation",
+ "fuzzydate",
+ "indexmap",
+ "itertools",
+ "nanoid",
+ "nucleo-matcher",
+ "once_cell",
+ "pathdiff",
+ "rayon",
+ "regex",
+ "ropey",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "shellexpand",
+ "tokio",
+ "tower-lsp",
+ "walkdir",
 ]
 
 [[package]]

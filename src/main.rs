@@ -365,6 +365,7 @@ impl LanguageServer for Backend {
                 code_action_provider: Some(CodeActionProviderCapability::Simple(true)),
                 workspace: Some(WorkspaceServerCapabilities {
                     file_operations: Some(WorkspaceFileOperationsServerCapabilities {
+                        will_rename: Some(file_op_reg.clone()),
                         did_create: Some(file_op_reg.clone()),
                         did_rename: Some(file_op_reg.clone()),
                         did_delete: Some(file_op_reg.clone()),
@@ -535,6 +536,35 @@ impl LanguageServer for Backend {
 
     async fn did_change_watched_files(&self, _params: DidChangeWatchedFilesParams) {
         self.reconstruct_vault().await
+    }
+
+    async fn will_rename_files(&self, params: RenameFilesParams) -> Result<Option<WorkspaceEdit>> {
+        self.bind_vault(move |vault| {
+            let mut ops = Vec::new();
+            for FileRename { old_uri, new_uri, .. } in params.files {
+                let old_path = Url::parse(&old_uri)
+                    .map_err(|_| Error::new(ErrorCode::InvalidParams))?
+                    .to_file_path()
+                    .map_err(|_| Error::new(ErrorCode::InvalidParams))?;
+                let new_path = Url::parse(&new_uri)
+                    .map_err(|_| Error::new(ErrorCode::InvalidParams))?
+                    .to_file_path()
+                    .map_err(|_| Error::new(ErrorCode::InvalidParams))?;
+                if let Some(we) = rename::rename_links_for_file(vault, &old_path, &new_path) {
+                    if let Some(DocumentChanges::Operations(mut v)) = we.document_changes {
+                        ops.append(&mut v);
+                    }
+                }
+            }
+            if ops.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(WorkspaceEdit {
+                    document_changes: Some(DocumentChanges::Operations(ops)),
+                    ..Default::default()
+                }))
+            }
+        }).await
     }
 
     async fn goto_definition(

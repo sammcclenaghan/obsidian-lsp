@@ -1,8 +1,8 @@
 [package]
-name = "markdown-oxide"
+name = "obsidian-lsp"
 version = "0.25.1"
 edition = "2021"
-repository = "https://github.com/Feel-ix-343/markdown-oxide"
+repository = "https://github.com/sammcclenaghan/obsidian-lsp"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
