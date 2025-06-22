@@ -20,6 +20,7 @@ use ropey::Rope;
 use serde::{Deserialize, Serialize};
 use tower_lsp::lsp_types::Position;
 use walkdir::WalkDir;
+use serde_yaml::Mapping;
 
 impl Vault {
     pub fn construct_vault(context: &Settings, root_dir: &Path) -> Result<Vault, std::io::Error> {
@@ -549,10 +550,28 @@ pub struct MDFile {
     pub link_reference_definitions: Vec<MDLinkReferenceDefinition>,
     pub metadata: Option<MDMetadata>,
     pub codeblocks: Vec<MDCodeBlock>,
+    /// Parsed YAML front-matter mapping
+    pub frontmatter: Option<Mapping>,
+    /// Range of the front-matter block
+    pub frontmatter_range: Option<MyRange>,
 }
 
 impl MDFile {
     fn new(context: &Settings, text: &str, path: PathBuf) -> MDFile {
+        // Parse YAML front-matter if present
+        let mut frontmatter: Option<Mapping> = None;
+        let mut frontmatter_range: Option<MyRange> = None;
+        if let Some(rest) = text.strip_prefix("---") {
+            if let Some((yaml, _)) = rest.split_once("\n---") {
+                if let Ok(map) = serde_yaml::from_str::<Mapping>(yaml) {
+                    frontmatter = Some(map);
+                }
+                let start = Position::new(0, 0);
+                let end_line = (yaml.lines().count() + 1) as u32;
+                let end = Position::new(end_line, 0);
+                frontmatter_range = Some(MyRange(tower_lsp::lsp_types::Range { start, end }));
+            }
+        }
         let code_blocks = MDCodeBlock::new(text).collect_vec();
         let file_name = path
             .file_stem()
@@ -597,6 +616,8 @@ impl MDFile {
             link_reference_definitions: link_refs.collect(),
             metadata,
             codeblocks: code_blocks,
+            frontmatter,
+            frontmatter_range,
         }
     }
 
@@ -617,6 +638,8 @@ impl MDFile {
             link_reference_definitions,
             metadata: _,
             codeblocks: _,
+            frontmatter: _,
+            frontmatter_range: _,
         } = self;
 
         iter::once(Referenceable::File(&self.path, self))

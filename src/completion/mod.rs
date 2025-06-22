@@ -18,6 +18,9 @@ mod matcher;
 mod tag_completer;
 mod unindexed_block_completer;
 mod util;
+mod frontmatter_completer;
+
+use self::frontmatter_completer::FrontmatterCompleter;
 
 #[derive(Clone, Copy)]
 pub struct Context<'a> {
@@ -64,12 +67,17 @@ pub fn get_completions(
         settings: config,
     };
 
-    // I would refactor this if I could figure out generic closures
-    run_completer::<UnindexedBlockCompleter<MarkdownLinkCompleter>>(
+    // front-matter key/value completions
+    run_completer::<FrontmatterCompleter>(
         completion_context,
         params.text_document_position.position.line,
         params.text_document_position.position.character,
     )
+    .or_else(|| run_completer::<UnindexedBlockCompleter<MarkdownLinkCompleter>>(
+        completion_context,
+        params.text_document_position.position.line,
+        params.text_document_position.position.character,
+    ))
     .or_else(|| {
         run_completer::<UnindexedBlockCompleter<WikiLinkCompleter>>(
             completion_context,
